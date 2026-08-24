@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Next</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- SCREEN 1: Task Input -->
+  <div id="screen-input" class="screen active">
+    <div class="input-container">
+      <div class="logo">next.</div>
+      <p class="tagline">What are you avoiding?</p>
+      <div class="input-wrapper">
+        <input
+          type="text"
+          id="task-input"
+          placeholder="e.g. Write my case study"
+          autocomplete="off"
+          autofocus
+        >
+        <button id="btn-decompose" class="btn-primary" disabled>Break it down</button>
+      </div>
+      <div class="hint">I'll find the smallest possible first step.</div>
+
+      <div id="task-history" class="task-history"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Loading / Decomposing -->
+  <div id="screen-loading" class="screen">
+    <div class="loading-container">
+      <div class="loading-text">Breaking it down...</div>
+      <div class="loading-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: The Takeover — shows ONE action -->
+  <div id="screen-takeover" class="screen">
+    <div class="takeover-container">
+      <div class="takeover-header">
+        <div class="step-counter" id="step-counter">Step 1 of 7</div>
+        <div class="time-estimate" id="time-estimate">~5s</div>
+      </div>
+
+      <div class="takeover-body">
+        <div class="action-text" id="action-text">Open your laptop</div>
+      </div>
+
+      <div class="takeover-footer">
+        <button id="btn-cant" class="btn-cant">I can't</button>
+        <button id="btn-done" class="btn-done">Done</button>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: "I can't" — asks why briefly -->
+  <div id="screen-cant" class="screen">
+    <div class="cant-container">
+      <div class="cant-header">That's okay.</div>
+      <div class="cant-subtext">Let me make it even smaller.</div>
+      <div class="cant-options">
+        <button class="cant-option" data-reason="too big">It feels too big</button>
+        <button class="cant-option" data-reason="unclear">I don't know how</button>
+        <button class="cant-option" data-reason="stuck">I'm just stuck</button>
+        <button class="cant-option" data-reason="skip">Skip this one</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: All done -->
+  <div id="screen-complete" class="screen">
+    <div class="complete-container">
+      <div class="complete-emoji">&#10003;</div>
+      <div class="complete-text">You started.</div>
+      <div class="complete-subtext" id="complete-stats">7 steps done in 3 minutes</div>
+      <div class="complete-message">That's all that matters.</div>
+      <button id="btn-another" class="btn-primary">Another task</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 6: Scheduled alarm overlay (demo) -->
+  <div id="screen-alarm" class="screen">
+    <div class="alarm-container">
+      <div class="alarm-pulse"></div>
+      <div class="alarm-time" id="alarm-time">2:30 PM</div>
+      <div class="alarm-reminder" id="alarm-reminder">You wanted to start the case study 20 minutes ago.</div>
+      <div class="alarm-action">Let's begin.</div>
+      <div class="alarm-task" id="alarm-task">Open Google Docs</div>
+      <button id="btn-alarm-start" class="btn-alarm">Start now</button>
+      <button id="btn-alarm-snooze" class="btn-snooze">5 more minutes</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
