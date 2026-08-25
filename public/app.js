@@ -188,6 +188,7 @@
     if (!task) return;
 
     currentTaskName = task;
+    els.btnDecompose.disabled = true;
     showScreen('loading');
 
     try {
@@ -196,6 +197,8 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ task })
       });
+
+      if (!res.ok) throw new Error(`API returned ${res.status}`);
 
       const data = await res.json();
       currentSteps = data.steps || [];

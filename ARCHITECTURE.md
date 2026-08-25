@@ -24,7 +24,7 @@ Next is an ADHD task-initiation tool. It takes a vague task, decomposes it into 
 └──────────────┬──────────────────────────────┘
                │ Gemini generateContent API
 ┌──────────────▼──────────────────────────────┐
-│  Gemini 2.5 Flash                           │
+│  Gemini 3.5 Flash Lite                           │
 │  - System prompt: 6-friction rules          │
 │  - responseMimeType: application/json       │
 └─────────────────────────────────────────────┘
@@ -32,14 +32,14 @@ Next is an ADHD task-initiation tool. It takes a vague task, decomposes it into 
 
 ## Key Design Decisions
 
-### Why Gemini 2.5 Flash (not Claude, GPT-4, etc.)
+### Why Gemini 3.5 Flash Lite (not Claude, GPT-4, etc.)
 
 | Factor | Decision |
 |--------|----------|
-| **Latency** | Flash is optimised for speed. Task decomposition needs to feel instant — any delay longer than ~2 seconds breaks the momentum we're trying to create. A slower model undermines the core UX. |
+| **Latency** | Flash Lite is optimised for speed. Task decomposition needs to feel instant — any delay longer than ~2 seconds breaks the momentum we're trying to create. A slower model undermines the core UX. |
 | **Cost** | Free tier is generous enough for a prototype. No billing setup needed for demo or evaluation. |
 | **JSON mode** | `responseMimeType: 'application/json'` gives native structured output without needing to parse markdown or hope for consistent formatting. This removes an entire class of bugs. |
-| **Quality floor** | The decomposition task (breaking a sentence into physical verbs) is well within Flash's capability. We don't need frontier reasoning — we need fast, reliable, structured output. |
+| **Right-sized** | The decomposition task (breaking a sentence into physical verbs) doesn't need frontier reasoning. Flash Lite gives us the best latency-to-quality ratio for this specific workload — fast, reliable, structured output. |
 
 ### Why Two-Phase UI (Takeover → Dynamic Island)
 
