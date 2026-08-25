@@ -8,7 +8,7 @@ ADHD task initiation failure isn't laziness. It's a wall between intention and a
 
 ## The Solution
 
-Next uses Gemini 2.0 Flash to decompose any task into 5-15 second physical actions and surfaces them one at a time:
+Next uses Gemini 2.5 Flash to decompose any task into 5-15 second physical actions and surfaces them one at a time:
 
 - **Phase 1 (Step 1): Full-screen takeover** — Black screen, one action, no escape. Maximum friction-breaking force to shatter the initiation wall.
 - **Phase 2 (Step 2+): Dynamic Island** — A floating pill at the top of the screen that acts as a pace-setter while you navigate other apps to do the actual work.

@@ -24,7 +24,7 @@ Next is an ADHD task-initiation tool. It takes a vague task, decomposes it into 
 └──────────────┬──────────────────────────────┘
                │ Gemini generateContent API
 ┌──────────────▼──────────────────────────────┐
-│  Gemini 2.0 Flash                           │
+│  Gemini 2.5 Flash                           │
 │  - System prompt: 6-friction rules          │
 │  - responseMimeType: application/json       │
 └─────────────────────────────────────────────┘
@@ -32,7 +32,7 @@ Next is an ADHD task-initiation tool. It takes a vague task, decomposes it into 
 
 ## Key Design Decisions
 
-### Why Gemini 2.0 Flash (not Claude, GPT-4, etc.)
+### Why Gemini 2.5 Flash (not Claude, GPT-4, etc.)
 
 | Factor | Decision |
 |--------|----------|
