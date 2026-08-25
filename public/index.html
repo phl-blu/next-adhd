@@ -105,6 +105,29 @@
     </div>
   </div>
 
+  <!-- Dynamic Island overlay for step 2+ -->
+  <div id="dynamic-island" class="dynamic-island">
+    <div class="di-collapsed" id="di-collapsed">
+      <div class="di-step-badge" id="di-step-badge">2/7</div>
+      <div class="di-action-preview" id="di-action-preview">Go to Google Docs</div>
+      <div class="di-time" id="di-time">~5s</div>
+    </div>
+    <div class="di-expanded" id="di-expanded">
+      <div class="di-expanded-header">
+        <div class="di-step-counter" id="di-step-counter-ex">Step 2 of 7</div>
+        <div class="di-time-est" id="di-time-ex">~5s</div>
+      </div>
+      <div class="di-expanded-action" id="di-expanded-action">Go to Google Docs and click '+ Blank'</div>
+      <div class="di-expanded-buttons">
+        <button id="di-btn-cant" class="di-btn-cant">I can't</button>
+        <button id="di-btn-done" class="di-btn-done">Done</button>
+      </div>
+      <div class="di-progress">
+        <div class="di-progress-fill" id="di-progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

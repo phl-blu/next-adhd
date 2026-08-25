@@ -1,14 +1,19 @@
 # next.
 
-**An ADHD-native task initiator.** Hides the full task tree. Shows only the next physical action. Reduces initiation friction to near-zero.
+**An ADHD-native task initiator.** Takes any vague task, decomposes it into atomic physical actions using AI, and presents them through a two-phase UI designed to break the initiation wall.
 
 ## The Problem
 
-ADHD task initiation failure isn't about laziness or forgetting. It's a 20-minute wall between deciding to do something and physically beginning. Every productivity tool makes it worse by showing you everything at once.
+ADHD task initiation failure isn't laziness. It's a wall between intention and action. You know what to do, you want to do it, you physically cannot begin. Every productivity tool makes it worse by showing you everything at once.
 
 ## The Solution
 
-Next uses an LLM to decompose any task into 5-15 second atomic physical actions and surfaces only one at a time via a full-screen takeover — like an alarm clock you have to engage with.
+Next uses Gemini 3.5 Flash Lite to decompose any task into 5-15 second physical actions and surfaces them one at a time:
+
+- **Phase 1 (Step 1): Full-screen takeover** — Black screen, one action, no escape. Maximum friction-breaking force to shatter the initiation wall.
+- **Phase 2 (Step 2+): Dynamic Island** — A floating pill at the top of the screen that acts as a pace-setter while you navigate other apps to do the actual work.
+
+If you tap **"I can't"** on any step, the AI re-decomposes it into even smaller micro-steps. No judgment.
 
 **"Write my case study"** becomes:
 1. Open a new browser tab *(3s)*
@@ -16,8 +21,6 @@ Next uses an LLM to decompose any task into 5-15 second atomic physical actions 
 3. Type the title *(5s)*
 4. Press Enter twice *(2s)*
 5. Type the first sentence that comes to mind *(15s)*
-
-If you tap **"I can't"** on any step, the AI breaks it down even smaller.
 
 ## Run It
 
@@ -27,13 +30,17 @@ node server.js
 # Open http://localhost:3000
 ```
 
-With Gemini API (real decomposition):
+With Gemini API (real AI decomposition):
 ```bash
 GEMINI_API_KEY=your-key node server.js
 ```
 
 Without an API key, built-in mock decompositions demonstrate the full UX flow.
 
+## Architecture
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for design decisions and technical rationale.
+
 ## Case Study
 
-See [CASE_STUDY.md](./CASE_STUDY.md) for the full write-up.
+See [CASE_STUDY.md](./CASE_STUDY.md) for the full Liminal case study write-up.
