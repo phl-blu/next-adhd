@@ -11,9 +11,7 @@ ADHD affects roughly 5% of adults worldwide. The single most debilitating sympto
 
 Every existing productivity tool makes this worse. They show you the *entire* task list: 47 items, nested subtasks, color-coded priorities, due dates in red. For an ADHD brain, that's not organization — it's paralysis. The tool itself becomes the obstacle.
 
-I have ADHD. I know this problem viscerally. The gap isn't "what to do" — it's the 20-minute wall between deciding to do something and physically beginning the first motion.
-
-**Why this matters beyond personal experience:** Untreated ADHD costs the U.S. economy $122.8 billion annually in lost productivity (Journal of Clinical Psychiatry, 2020). Task initiation is the bottleneck, and no tool addresses it at the right layer.
+I have ADHD. I know this problem viscerally. The gap isn't "what to do" — it's the wall between deciding to do something and physically beginning the first motion.
 
 ### The 6-Friction Framework
 
@@ -46,14 +44,16 @@ LLMs are the first tool that can:
 
 No previous tool could do this. Rule-based systems can't handle the infinite variety of human tasks. A checklist app requires the human to decompose (which is itself a task requiring initiation). An LLM can do the cognitive work the ADHD brain cannot.
 
-### The Design: Full-Screen Takeover
+### The Design: Two-Phase UI
 
 Next doesn't send you a notification. Notifications are dismissable — and dismissing things is what ADHD brains do.
 
-Instead, Next takes over the entire screen, like an alarm clock:
+**Phase 1 — Full-screen takeover (step 1 only)**
+
+The hardest moment is the first action. Next takes over the entire screen, like an alarm clock:
 
 > **2:30 PM**
-> You wanted to start the case study 20 minutes ago.
+> You wanted to start the case study a while ago.
 > Let's begin.
 >
 > # Open Google Docs
@@ -67,7 +67,13 @@ The key properties:
 - **Two buttons** — "Done" (advance) or "I can't" (re-decompose smaller)
 - **No dismiss** — like an alarm, you must engage with it
 
-After you tap "Done," the next action appears. And the next. Each one takes 5–15 seconds. Before you know it, you've been working for 10 minutes. Initiation has already happened.
+**Phase 2 — Dynamic Island (step 2+)**
+
+After you complete step 1, the friction shifts from "can't begin" to "might lose momentum." A full-screen takeover for every step would be patronising and would prevent you from doing the actual work (which often requires other apps).
+
+Instead, a floating pill appears at the top of the screen — inspired by the iOS Dynamic Island. It shows the step badge and current action as a persistent pace-setter while you navigate to other apps (browser, Google Docs, file manager). Tap to expand for the full action and Done/I can't buttons.
+
+Before you know it, you've been working for 10 minutes. Initiation has already happened.
 
 ### How "I Can't" Works
 
@@ -90,7 +96,8 @@ A working prototype is included in this repository (`/next`). It's a Node.js web
 
 ```
 ┌───────────────────────────┐
-│    Full-Screen Web App    │   ← The "alarm" UI
+│  Phase 1: Full-Screen     │   ← Step 1: break the wall
+│  Phase 2: Dynamic Island  │   ← Step 2+: pace-setter
 │  (HTML/CSS/JS + Fullscreen API)│
 └──────────┬────────────────┘
            │ HTTP API
@@ -101,8 +108,8 @@ A working prototype is included in this repository (`/next`). It's a Node.js web
 └──────────┬────────────────┘
            │
 ┌──────────▼────────────────┐
-│     Claude API            │   ← The decomposition engine
-│  (Sonnet 4)               │
+│   Gemini 3.5 Flash Lite   │   ← The decomposition engine
+│  (responseMimeType: JSON) │
 │  System prompt:           │
 │  - Physical verbs only    │
 │  - 5-15s per step         │
@@ -116,7 +123,7 @@ A working prototype is included in this repository (`/next`). It's a Node.js web
 ```bash
 cd next
 npm install
-ANTHROPIC_API_KEY=your-key node server.js
+GEMINI_API_KEY=your-key node server.js
 # Open http://localhost:3000
 ```
 
@@ -143,6 +150,7 @@ Without an API key, the prototype uses built-in mock decompositions for common t
 |---|---|---|
 | Task decomposition via LLM | Yes | Yes |
 | Full-screen takeover UI | Yes | Yes (native app) |
+| Dynamic Island (step 2+) | Yes (web simulation) | Yes (iOS Live Activities / ActivityKit) |
 | "I can't" re-decomposition | Yes | Yes |
 | Step-by-step execution | Yes | Yes |
 | Completion tracking | Yes (localStorage) | Persistent DB |
@@ -167,7 +175,7 @@ A person with ADHD using Todoist, Notion, or Things:
 4. Estimates it'll take 2 hours → "I don't have time for that right now" (Friction: Time-scope)
 5. Closes the app → opens Instagram → 45 minutes gone
 
-**Result:** 0% task initiation rate on hard tasks. Average 20+ minutes from "I should do X" to first physical motion (if it happens at all).
+**Result:** Near-zero task initiation rate on hard tasks. The gap from "I should do X" to first physical motion can stretch indefinitely — if it happens at all.
 
 ### After AI (Next)
 
@@ -179,7 +187,7 @@ The same person with Next:
 4. 7 steps later, they're writing → initiation happened without them noticing
 5. If stuck on any step → "I can't" → gets an even smaller step
 
-**Projected result:** 60-80% initiation rate on hard tasks. Average <30 seconds from alarm to first physical motion.
+**Projected result:** Significantly higher initiation rate. The alarm-to-first-motion gap collapses because each step is trivially small and immediately actionable.
 
 ### Where AI Augmentation Breaks Down
 
@@ -225,7 +233,7 @@ The tool helped build the tool. The proof is recursive.
 
 Liminal builds with seasoned founders from MVP to Series B. Next is:
 
-- **A real problem** with a $122B economic cost and 350M people affected globally
+- **A real problem** — ADHD affects roughly 5% of adults globally, and task initiation is the bottleneck no tool addresses
 - **AI-native** — impossible without LLMs (no rule-based system can decompose arbitrary human tasks into physical actions)
 - **Defensible** — the moat is in the decomposition prompt engineering, the "I can't" re-decomposition loop, and the behavioral data on what step-sizes work for which task types
 - **Measurable** — initiation latency is a concrete metric, not a vague "productivity improvement"
