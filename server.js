@@ -7,7 +7,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = 'gemini-2.0-flash';
 
 const SYSTEM_PROMPT = `You are the decomposition engine for "Next," an ADHD task-initiation tool.
 
@@ -33,6 +34,33 @@ Respond ONLY with valid JSON in this exact format:
   "total_estimate": "3 minutes"
 }`;
 
+async function callGemini(systemPrompt, userMessage) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ parts: [{ text: userMessage }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        maxOutputTokens: 1024
+      }
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error('Gemini API error:', data);
+    return null;
+  }
+
+  const text = data.candidates[0].content.parts[0].text;
+  return JSON.parse(text);
+}
+
 app.post('/api/decompose', async (req, res) => {
   const { task } = req.body;
 
@@ -40,36 +68,13 @@ app.post('/api/decompose', async (req, res) => {
     return res.status(400).json({ error: 'Task is required' });
   }
 
-  if (!ANTHROPIC_API_KEY) {
+  if (!GEMINI_API_KEY) {
     return res.json(getMockDecomposition(task));
   }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: `Decompose this task: ${task}` }]
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Claude API error:', data);
-      return res.json(getMockDecomposition(task));
-    }
-
-    const text = data.content[0].text;
-    const parsed = JSON.parse(text);
-    res.json(parsed);
+    const result = await callGemini(SYSTEM_PROMPT, `Decompose this task: ${task}`);
+    res.json(result || getMockDecomposition(task));
   } catch (err) {
     console.error('Decomposition error:', err);
     res.json(getMockDecomposition(task));
@@ -79,7 +84,7 @@ app.post('/api/decompose', async (req, res) => {
 app.post('/api/redecompose', async (req, res) => {
   const { action, reason } = req.body;
 
-  if (!ANTHROPIC_API_KEY) {
+  if (!GEMINI_API_KEY) {
     return res.json({
       task_summary: "Easier start",
       steps: [
@@ -92,36 +97,17 @@ app.post('/api/redecompose', async (req, res) => {
   }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT + `\n\nThe user said "I can't" to the action: "${action}"\nTheir reason: "${reason || 'no reason given'}"\n\nBreak this single action into even smaller micro-steps. Make the first step so trivially easy it's almost silly. Think: "stand up" or "put your hand on the mouse."`,
-        messages: [{ role: 'user', content: `Make this easier: ${action}` }]
-      })
+    const redecomposePrompt = SYSTEM_PROMPT + `\n\nThe user said "I can't" to the action: "${action}"\nTheir reason: "${reason || 'no reason given'}"\n\nBreak this single action into even smaller micro-steps. Make the first step so trivially easy it's almost silly. Think: "stand up" or "put your hand on the mouse."`;
+
+    const result = await callGemini(redecomposePrompt, `Make this easier: ${action}`);
+    res.json(result || {
+      task_summary: "Easier start",
+      steps: [
+        { action: "Take one deep breath", time_estimate: "5s" },
+        { action: action, time_estimate: "15s" }
+      ],
+      total_estimate: "20 seconds"
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.json({
-        task_summary: "Easier start",
-        steps: [
-          { action: "Take one deep breath", time_estimate: "5s" },
-          { action: action, time_estimate: "15s" }
-        ],
-        total_estimate: "20 seconds"
-      });
-    }
-
-    const text = data.content[0].text;
-    res.json(JSON.parse(text));
   } catch (err) {
     console.error('Redecompose error:', err);
     res.json({
