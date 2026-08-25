@@ -27,9 +27,9 @@ node server.js
 # Open http://localhost:3000
 ```
 
-With Claude API (real decomposition):
+With Gemini API (real decomposition):
 ```bash
-ANTHROPIC_API_KEY=your-key node server.js
+GEMINI_API_KEY=your-key node server.js
 ```
 
 Without an API key, built-in mock decompositions demonstrate the full UX flow.
