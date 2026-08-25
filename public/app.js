@@ -136,15 +136,20 @@
       updateIsland();
       island.root.classList.remove('expanded');
 
+      island.collapsed.classList.add('step-flash');
       island.collapsed.style.animation = 'none';
       island.collapsed.offsetHeight;
       island.collapsed.style.animation = 'diSlideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      setTimeout(() => island.collapsed.classList.remove('step-flash'), 500);
     }
   });
 
   island.btnCant.addEventListener('click', () => {
     island.root.classList.remove('expanded');
+    // Preserve islandMode flag before hideIsland clears it
+    const wasIsland = true;
     hideIsland();
+    islandMode = wasIsland;
     showScreen('cant');
   });
 
@@ -230,6 +235,10 @@
     stepsCompleted++;
     currentStepIndex++;
 
+    // Brief green flash on the takeover screen
+    document.body.classList.add('step-flash');
+    setTimeout(() => document.body.classList.remove('step-flash'), 500);
+
     if (currentStepIndex >= currentSteps.length) {
       finishTask();
     } else {
@@ -247,7 +256,6 @@
     const timeStr = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
 
     els.completeStats.textContent = `${stepsCompleted} steps done in ${timeStr}`;
-    els.progressFill.style.width = '100%';
 
     completedTasks.push({
       name: currentTaskName,
@@ -262,6 +270,11 @@
 
     exitFullscreen();
     showScreen('complete');
+
+    // Animate progress to 100% after screen transition
+    requestAnimationFrame(() => {
+      els.progressFill.style.width = '100%';
+    });
   }
 
   els.btnCant.addEventListener('click', () => {
