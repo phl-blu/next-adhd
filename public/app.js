@@ -7,6 +7,7 @@
   let stepsCompleted = 0;
   let currentTaskName = '';
   let completedTasks = JSON.parse(localStorage.getItem('next_completed') || '[]');
+  let islandMode = false;
 
   const screens = {
     input: document.getElementById('screen-input'),
@@ -36,12 +37,31 @@
     btnAlarmSnooze: document.getElementById('btn-alarm-snooze')
   };
 
+  const island = {
+    root: document.getElementById('dynamic-island'),
+    collapsed: document.getElementById('di-collapsed'),
+    expanded: document.getElementById('di-expanded'),
+    stepBadge: document.getElementById('di-step-badge'),
+    actionPreview: document.getElementById('di-action-preview'),
+    time: document.getElementById('di-time'),
+    stepCounterEx: document.getElementById('di-step-counter-ex'),
+    timeEx: document.getElementById('di-time-ex'),
+    expandedAction: document.getElementById('di-expanded-action'),
+    btnDone: document.getElementById('di-btn-done'),
+    btnCant: document.getElementById('di-btn-cant'),
+    progressFill: document.getElementById('di-progress-fill')
+  };
+
   function showScreen(name) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[name].classList.add('active');
 
     if (name === 'takeover' || name === 'alarm') {
       tryFullscreen();
+    }
+
+    if (name !== 'takeover') {
+      hideIsland();
     }
   }
 
@@ -59,6 +79,76 @@
       document.exitFullscreen().catch(() => {});
     }
   }
+
+  // === Dynamic Island ===
+
+  function showIsland() {
+    islandMode = true;
+    island.root.classList.add('visible');
+    island.root.classList.remove('expanded');
+    exitFullscreen();
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+  }
+
+  function hideIsland() {
+    islandMode = false;
+    island.root.classList.remove('visible', 'expanded');
+  }
+
+  function updateIsland() {
+    const step = currentSteps[currentStepIndex];
+    if (!step) return;
+
+    const label = `${currentStepIndex + 1}/${currentSteps.length}`;
+    const timeStr = step.time_estimate || '~10s';
+    const progress = (currentStepIndex / currentSteps.length) * 100;
+
+    island.stepBadge.textContent = label;
+    island.actionPreview.textContent = step.action;
+    island.time.textContent = timeStr;
+
+    island.stepCounterEx.textContent = `Step ${currentStepIndex + 1} of ${currentSteps.length}`;
+    island.timeEx.textContent = `~${timeStr}`;
+    island.expandedAction.textContent = step.action;
+    island.progressFill.style.width = progress + '%';
+  }
+
+  island.collapsed.addEventListener('click', () => {
+    island.root.classList.add('expanded');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (island.root.classList.contains('expanded') &&
+        !island.expanded.contains(e.target) &&
+        !island.collapsed.contains(e.target)) {
+      island.root.classList.remove('expanded');
+    }
+  });
+
+  island.btnDone.addEventListener('click', () => {
+    stepsCompleted++;
+    currentStepIndex++;
+
+    if (currentStepIndex >= currentSteps.length) {
+      hideIsland();
+      finishTask();
+    } else {
+      updateIsland();
+      island.root.classList.remove('expanded');
+
+      island.collapsed.style.animation = 'none';
+      island.collapsed.offsetHeight;
+      island.collapsed.style.animation = 'diSlideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    }
+  });
+
+  island.btnCant.addEventListener('click', () => {
+    island.root.classList.remove('expanded');
+    hideIsland();
+    showScreen('cant');
+  });
+
+  // === End Dynamic Island ===
 
   function renderHistory() {
     els.taskHistory.innerHTML = completedTasks.slice(-5).reverse().map(t =>
@@ -143,7 +233,10 @@
     if (currentStepIndex >= currentSteps.length) {
       finishTask();
     } else {
-      showStep();
+      // Step 1 done on full-screen — switch to Dynamic Island for step 2+
+      exitFullscreen();
+      updateIsland();
+      showIsland();
     }
   });
 
@@ -184,6 +277,9 @@
         currentStepIndex++;
         if (currentStepIndex >= currentSteps.length) {
           finishTask();
+        } else if (currentStepIndex > 1) {
+          updateIsland();
+          showIsland();
         } else {
           showStep();
           showScreen('takeover');
@@ -205,13 +301,25 @@
 
         if (newSteps.length > 0) {
           currentSteps.splice(currentStepIndex, 1, ...newSteps);
-          showStep();
         }
 
-        showScreen('takeover');
+        // If we were in island mode before "I can't", return to island
+        if (islandMode || currentStepIndex > 0) {
+          updateIsland();
+          showIsland();
+          island.root.classList.add('expanded');
+        } else {
+          showStep();
+          showScreen('takeover');
+        }
       } catch (err) {
         console.error('Redecompose failed:', err);
-        showScreen('takeover');
+        if (islandMode || currentStepIndex > 0) {
+          updateIsland();
+          showIsland();
+        } else {
+          showScreen('takeover');
+        }
       }
     });
   });
@@ -221,6 +329,7 @@
     els.btnDecompose.disabled = true;
     renderHistory();
     exitFullscreen();
+    hideIsland();
     showScreen('input');
     els.taskInput.focus();
   });
@@ -250,6 +359,7 @@
 
   els.btnAlarmSnooze.addEventListener('click', () => {
     exitFullscreen();
+    hideIsland();
     showScreen('input');
     renderHistory();
   });
@@ -277,6 +387,7 @@
   document.getElementById('demo-flow').addEventListener('click', () => {
     els.taskInput.value = 'Complete my Liminal case study';
     els.btnDecompose.disabled = false;
+    hideIsland();
     showScreen('input');
     els.taskInput.focus();
   });
@@ -297,6 +408,24 @@
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         els.btnAlarmStart.click();
+      }
+    }
+
+    // Dynamic Island keyboard shortcuts
+    if (island.root.classList.contains('visible')) {
+      if (island.root.classList.contains('expanded')) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          island.btnDone.click();
+        }
+        if (e.key === 'Escape') {
+          island.btnCant.click();
+        }
+      } else {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          island.root.classList.add('expanded');
+        }
       }
     }
   });
