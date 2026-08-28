@@ -53,8 +53,9 @@ async function callGemini(systemPrompt, userMessage) {
   const data = await response.json();
 
   if (!response.ok) {
-    console.error('Gemini API error:', data);
-    return null;
+    console.error('Gemini API error:', JSON.stringify(data, null, 2));
+    const msg = data?.error?.message || 'Unknown API error';
+    throw new Error(`Gemini API ${response.status}: ${msg}`);
   }
 
   const text = data.candidates[0].content.parts[0].text;
@@ -69,55 +70,70 @@ app.post('/api/decompose', async (req, res) => {
   }
 
   if (!GEMINI_API_KEY) {
-    return res.json(getMockDecomposition(task));
+    return res.json({ ...getMockDecomposition(task), source: 'mock' });
   }
 
   try {
     const result = await callGemini(SYSTEM_PROMPT, `Decompose this task: ${task}`);
-    res.json(result || getMockDecomposition(task));
+    if (!result) {
+      return res.json({ ...getMockDecomposition(task), source: 'mock' });
+    }
+    res.json({ ...result, source: 'ai' });
   } catch (err) {
-    console.error('Decomposition error:', err);
-    res.json(getMockDecomposition(task));
+    console.error('Decomposition error:', err.message);
+    res.json({ ...getMockDecomposition(task), source: 'mock', api_error: err.message });
   }
 });
 
 app.post('/api/redecompose', async (req, res) => {
   const { action, reason } = req.body;
 
+  const fallback = {
+    task_summary: "Easier start",
+    steps: [
+      { action: "Stand up from your chair", time_estimate: "3s" },
+      { action: "Take one deep breath", time_estimate: "5s" },
+      { action: action.replace(/^[A-Z]/, c => c.toLowerCase()), time_estimate: "10s" }
+    ],
+    total_estimate: "20 seconds"
+  };
+
   if (!GEMINI_API_KEY) {
-    return res.json({
-      task_summary: "Easier start",
-      steps: [
-        { action: "Stand up from your chair", time_estimate: "3s" },
-        { action: "Take one deep breath", time_estimate: "5s" },
-        { action: action.replace(/^[A-Z]/, c => c.toLowerCase()), time_estimate: "10s" }
-      ],
-      total_estimate: "20 seconds"
-    });
+    return res.json({ ...fallback, source: 'mock' });
   }
 
   try {
     const redecomposePrompt = SYSTEM_PROMPT + `\n\nThe user said "I can't" to the action: "${action}"\nTheir reason: "${reason || 'no reason given'}"\n\nBreak this single action into even smaller micro-steps. Make the first step so trivially easy it's almost silly. Think: "stand up" or "put your hand on the mouse."`;
 
     const result = await callGemini(redecomposePrompt, `Make this easier: ${action}`);
-    res.json(result || {
-      task_summary: "Easier start",
-      steps: [
-        { action: "Take one deep breath", time_estimate: "5s" },
-        { action: action, time_estimate: "15s" }
-      ],
-      total_estimate: "20 seconds"
-    });
+    res.json({ ...(result || fallback), source: result ? 'ai' : 'mock' });
   } catch (err) {
-    console.error('Redecompose error:', err);
-    res.json({
-      task_summary: "Easier start",
-      steps: [
-        { action: "Take one deep breath", time_estimate: "5s" },
-        { action: action, time_estimate: "15s" }
-      ],
-      total_estimate: "20 seconds"
+    console.error('Redecompose error:', err.message);
+    res.json({ ...fallback, source: 'mock', api_error: err.message });
+  }
+});
+
+app.get('/api/test-key', async (req, res) => {
+  if (!GEMINI_API_KEY) {
+    return res.json({ ok: false, error: 'GEMINI_API_KEY not set. Run: GEMINI_API_KEY=your-key node server.js' });
+  }
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: 'Reply with just: {"status":"ok"}' }] }],
+        generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 32 }
+      })
     });
+    const data = await response.json();
+    if (!response.ok) {
+      return res.json({ ok: false, status: response.status, error: data?.error?.message || 'API error' });
+    }
+    res.json({ ok: true, model: GEMINI_MODEL, response: data.candidates?.[0]?.content?.parts?.[0]?.text });
+  } catch (err) {
+    res.json({ ok: false, error: err.message });
   }
 });
 
